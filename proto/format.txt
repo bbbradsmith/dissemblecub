@@ -1,0 +1,76 @@
+# .dcub file format notes
+# (planning dissemblecub features by the data needed to specify/store them)
+
+# comments
+# DISSEMBLECUB version
+# CPU cpuname
+# ROM filename [CRC32 checksum]
+# - generates warning if checksum invalid
+
+# MODE [parameter] [value]
+#   various CPU/platform specific options/needs
+#   e.g. 65C016
+#     MODE I8/A8/I16/A16/AUTO addr
+#   e.g. x86
+#     MODE DS expresion
+#   MODE ILLEGAL 1/0
+#     turn on illegal opcodes for CPUs that have them?
+
+# SEGMENT name type rw address size [rom_address]
+#   no rom_address = not mapped to ROM (just a place for labels/constants)
+#   type: CPU, PPU/VRAM, etc. (platform specific)
+#   rw: R, W, RW filters symbol matching by instruction use
+# SEGVIS segment [seen_by] ...
+#   which segments can see this one
+#   seen_by = ALL means it's global
+
+# DATA type addr range [endian]
+#   type: (U/S)INT(8/16/24/32)
+#   type: HEX(8/16/24/32)
+#   type: ASCII
+#   type: MAPSTRING (advanced) -> allow byte/byte-combo to unicode remapping table?
+#   type: FLOAT ? (maybe)
+# CODE addr [range]
+#   defines an entry point for code spider
+#   range if used will go back and re-enter each byte if the spider does has
+#     not already reached them (linear order)
+# REWRITE addr range "text"
+#   disables all automatic text generation for the line at this address, write whatever you want (can do multiple lines with multiple statements)
+
+# addr: either segment:addr or a plain address is considered a ROM offset (segment auto-derived)
+# LABEL name addr [range]
+#   these are only auto-used with address parameters (and only if segment is visible)
+#   if it has a range, anything in that range will get +1 etc.
+#   (segment can have labels outside its range, too)
+# COMMENT addr "comment" # goes on the end of line after addr (or appends extra)
+# PRECOMMENT addr "comment" # goes on a line (or appends lines) before addr
+# CONST name addr (must use segment:addr)
+#   these are only auto-used with immediate parameters
+
+# RESOLVE addr expression [expression] ...
+#   replace an operand with an expression (label/const/common operators)
+#   (will automatically put a + or - on the end of the expression to compensate if it doesn't equal the expression)
+#   for multiple operands (or multiple data entries) you can have repeated expressions
+#   expression=. # use hex literal
+#   expression=.(S/U)(INT/HEX)
+#   expression=() # use auto
+
+# PATCH name
+#   REPLACE addr bytes
+#   COPY addr addr bytes # make sure to do the right thing when overlapping
+#   EXPAND bytes # add padding to ROM, or shrink it with a negative value
+#   DELETE [thing] addr # delete comment, label, const, etc.
+#   DATA/CODE/COMMENT/LABEL/CONST/etc.
+# PATCHEND
+
+# OUTPUT COLUMNS label statement romaddress segaddress hex
+#   columns for label, statement, then sigdigs of rom/segment address (0 to skip) and bytes of hex for instruction
+# OUTPUT CASE UPPER/LOWER
+#   opcode mnemonic case
+
+# diagnostics:
+# - list of ROM areas not included in any segment
+# - list of unresolved far-jumps from any segment
+# - list of places where code terminates at illegal opcode
+# - list of ambiguous operand addresses if there are multiple auto-matches
+# - 65816 operand size unknown warning? REP/SEP it can't handle?

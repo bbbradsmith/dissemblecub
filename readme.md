@@ -1,1 +1,1 @@
-dissemblecub is a planned interactive disassembly tool for 6502 platforms, especially NES, and possibly 61856 eventually
+dissemblecub is a planned interactive disassembly tool for 6502 platforms, especially NES, and possibly 61856 eventually, maybe Z80?
